@@ -1,0 +1,57 @@
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  lead      Lead?
+  // Password reset tokens
+  passwordResets PasswordReset[] // One account can have multiple password reset requests
+}
+
+model Lead {
+  id         Int      @id @default(autoincrement())
+  FirstName  String
+  LastName   String
+  Phone      String
+  Email      String
+  Address    String
+  City       String
+  PostalCode String
+  student    Student_c?
+  accountId  Int      @unique
+  account    Account  @relation(fields: [accountId], references: [id])
+}
+
+model Student_c {
+  id                  Int      @id @default(autoincrement())
+  First_Name__c       String
+  Last_Name__c        String
+  Birthdate__c        DateTime
+  Grade_of_Interest__c String
+  Entry_Year__c       String
+  Parent__c           Int      @unique
+  lead                Lead     @relation(fields: [Parent__c], references: [id])
+}
+
+// PasswordReset model for managing password reset tokens
+model PasswordReset {
+  id        Int      @id @default(autoincrement())
+  email     String   // Email of the user requesting the password reset
+  token     String   @unique // The reset token itself
+  expires   DateTime // Expiration time of the token
+  createdAt DateTime @default(now()) // When the request was made
+
+  // A password reset request is tied to a specific account (user)
+  account   Account  @relation(fields: [email], references: [email])
+}
